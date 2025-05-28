@@ -408,6 +408,27 @@
             }
         }
         
+        // 強制再ログイン（権限再取得）
+        async function forceRelogin() {
+            try {
+                showStatus('権限を再取得しています...', 'loading');
+                
+                // 現在のセッションをクリア
+                if (liff.isLoggedIn()) {
+                    await liff.logout();
+                }
+                
+                // 強制的に再ログイン（権限再承認）
+                liff.login({
+                    redirectUri: window.location.href
+                });
+                
+            } catch (error) {
+                console.error('再ログインエラー:', error);
+                showStatus(`再ログインエラー: ${error.message}`, 'error');
+            }
+        }
+        
         // ページ読み込み時の自動初期化（オプション）
         // window.addEventListener('load', initializeLIFF);
     </script>
