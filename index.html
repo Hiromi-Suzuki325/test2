@@ -1,436 +1,409 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LIFF ユーザー情報表示</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        
-        // 強制再ログイン（権限再取得）
-        async function forceRelogin() {
-            try {
-                showStatus('権限を再取得しています...', 'loading');
-                
-                // 現在のセッションをクリア
-                if (liff.isLoggedIn()) {
-                    await liff.logout();
-                }
-                
-                // 強制的に再ログイン（権限再承認）
-                liff.login({
-                    redirectUri: window.location.href
-                });
-                
-            } catch (error) {
-                console.error('再ログインエラー:', error);
-                showStatus(`再ログインエラー: ${error.message}`, 'error');
-            }
-        }
-        
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .title {
-            text-align: center;
-            color: #333;
-            margin-bottom: 24px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        
-        .profile-info {
-            display: none;
-            text-align: center;
-        }
-        
-        .profile-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 16px;
-            display: block;
-        }
-        
-        .info-item {
-            margin-bottom: 16px;
-            padding: 12px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .info-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        
-        .info-value {
-            font-size: 14px;
-            color: #333;
-            word-break: break-all;
-        }
-        
-        .init-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #00C300;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 16px;
-        }
-        
-        .init-button:hover {
-            background-color: #00A300;
-        }
-        
-        .init-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .status {
-            text-align: center;
-            margin-bottom: 16px;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .status.loading {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .status.success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        .message-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #eee;
-        }
-        
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .action-button {
-            width: 100%;
-            padding: 12px;
-            background-color: #42a5f5;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .action-button:hover {
-            background-color: #1e88e5;
-        }
-        
-        .action-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 24px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .profile-info {
+        display: none;
+        text-align: center;
+      }
+
+      .profile-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 16px;
+        display: block;
+      }
+
+      .info-item {
+        margin-bottom: 16px;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .info-label {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+      }
+
+      .info-value {
+        font-size: 14px;
+        color: #333;
+        word-break: break-all;
+      }
+
+      .init-button {
+        width: 100%;
+        padding: 12px;
+        background-color: #00c300;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 16px;
+      }
+
+      .init-button:hover {
+        background-color: #00a300;
+      }
+
+      .init-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .status {
+        text-align: center;
+        margin-bottom: 16px;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .status.loading {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .status.success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .message-section {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #eee;
+      }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .action-button {
+        width: 100%;
+        padding: 12px;
+        background-color: #42a5f5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .action-button:hover {
+        background-color: #1e88e5;
+      }
+
+      .action-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1 class="title">LIFF ユーザー情報</h1>
-        
-        <div id="status" class="status" style="display: none;"></div>
-        
-        <button id="initButton" class="init-button">LIFF初期化</button>
-        
-        <button id="reloginButton" class="init-button" style="background-color: #ff6b35; margin-bottom: 16px;">
-            🔄 権限を再取得
-        </button>
-        
-        <div id="profileInfo" class="profile-info">
-            <img id="profileImage" class="profile-image" src="" alt="プロフィール画像">
-            
-            <div class="info-item">
-                <div class="info-label">表示名</div>
-                <div id="displayName" class="info-value">-</div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">ユーザーID</div>
-                <div id="userId" class="info-value">-</div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">ステータスメッセージ</div>
-                <div id="statusMessage" class="info-value">-</div>
-            </div>
-            
-            <!-- メッセージ送信セクション -->
-            <div class="message-section">
-                <h3 style="color: #333; margin: 24px 0 16px; font-size: 16px;">メッセージ送信</h3>
-                
-                <input type="text" id="messageInput" placeholder="送信したいメッセージを入力" 
-                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
-                
-                <div class="button-group">
-                    <button id="checkEnvironment" class="action-button" style="background-color: #666;">
-                        🔍 環境確認
-                    </button>
-                    
-                    <button id="sendTextButton" class="action-button">
-                        📝 テキスト送信
-                    </button>
-                    
-                    <button id="sendStickerButton" class="action-button">
-                        😊 スタンプ送信
-                    </button>
-                    
-                    <button id="sendLocationButton" class="action-button">
-                        📍 位置情報送信
-                    </button>
-                </div>
-            </div>
+      <h1 class="title">LIFF ユーザー情報</h1>
+
+      <div id="status" class="status" style="display: none"></div>
+
+      <button id="initButton" class="init-button">LIFF初期化</button>
+
+      <div id="profileInfo" class="profile-info">
+        <img
+          id="profileImage"
+          class="profile-image"
+          src=""
+          alt="プロフィール画像"
+        />
+
+        <div class="info-item">
+          <div class="info-label">表示名</div>
+          <div id="displayName" class="info-value">-</div>
         </div>
+
+        <div class="info-item">
+          <div class="info-label">ユーザーID</div>
+          <div id="userId" class="info-value">-</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">ステータスメッセージ</div>
+          <div id="statusMessage" class="info-value">-</div>
+        </div>
+
+        <!-- メッセージ送信セクション -->
+        <div class="message-section">
+          <h3 style="color: #333; margin: 24px 0 16px; font-size: 16px">
+            メッセージ送信
+          </h3>
+
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="送信したいメッセージを入力"
+            style="
+              width: 100%;
+              padding: 12px;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              margin-bottom: 12px;
+              box-sizing: border-box;
+              font-size: 14px;
+            "
+          />
+
+          <div class="button-group">
+            <button id="sendTextButton" class="action-button">
+              📝 テキスト送信
+            </button>
+
+            <button id="sendStickerButton" class="action-button">
+              😊 スタンプ送信
+            </button>
+
+            <button id="sendLocationButton" class="action-button">
+              📍 位置情報送信
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- LIFF SDK読み込み -->
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    
+    <script
+      charset="utf-8"
+      src="https://static.line-scdn.net/liff/edge/2/sdk.js"
+    ></script>
+
     <script>
-        // LIFF ID を設定してください（LINE Developersコンソールから取得）
-        const LIFF_ID = '2007493358-Gn1v9WNa'; // ここにあなたのLIFF IDを入力
-        
-        // DOM要素の取得
-        const initButton = document.getElementById('initButton');
-        const reloginButton = document.getElementById('reloginButton');
-        const statusDiv = document.getElementById('status');
-        const profileInfo = document.getElementById('profileInfo');
-        const profileImage = document.getElementById('profileImage');
-        const displayName = document.getElementById('displayName');
-        const userId = document.getElementById('userId');
-        const statusMessage = document.getElementById('statusMessage');
-        
-        // メッセージ送信用の要素
-        const messageInput = document.getElementById('messageInput');
-        const checkEnvironment = document.getElementById('checkEnvironment');
-        const sendTextButton = document.getElementById('sendTextButton');
-        const sendStickerButton = document.getElementById('sendStickerButton');
-        const sendLocationButton = document.getElementById('sendLocationButton');
-        
-        // ステータス表示関数
-        function showStatus(message, type = 'loading') {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
-            statusDiv.style.display = 'block';
+      // LIFF ID を設定してください（LINE Developersコンソールから取得）
+      const LIFF_ID = "2007493358-3eBLORWm"; // ここにあなたのLIFF IDを入力
+
+      // DOM要素の取得
+      const initButton = document.getElementById("initButton");
+      const statusDiv = document.getElementById("status");
+      const profileInfo = document.getElementById("profileInfo");
+      const profileImage = document.getElementById("profileImage");
+      const displayName = document.getElementById("displayName");
+      const userId = document.getElementById("userId");
+      const statusMessage = document.getElementById("statusMessage");
+
+      // メッセージ送信用の要素
+      const messageInput = document.getElementById("messageInput");
+      const sendTextButton = document.getElementById("sendTextButton");
+      const sendStickerButton = document.getElementById("sendStickerButton");
+      const sendLocationButton = document.getElementById("sendLocationButton");
+
+      // ステータス表示関数
+      function showStatus(message, type = "loading") {
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`;
+        statusDiv.style.display = "block";
+      }
+
+      // ステータス非表示関数
+      function hideStatus() {
+        statusDiv.style.display = "none";
+      }
+
+      // LIFF初期化処理
+      async function initializeLIFF() {
+        try {
+          showStatus("LIFF初期化中...", "loading");
+          initButton.disabled = true;
+
+          // LIFF初期化
+          await liff.init({ liffId: LIFF_ID });
+
+          // ログイン状態チェック
+          if (!liff.isLoggedIn()) {
+            showStatus("ログインが必要です", "error");
+            liff.login();
+            return;
+          }
+
+          showStatus("プロフィール情報取得中...", "loading");
+
+          // プロフィール情報取得
+          const profile = await liff.getProfile();
+
+          // プロフィール情報を表示
+          displayProfile(profile);
+
+          // LIFF環境の確認
+          console.log("LIFF Context:", {
+            isInClient: liff.isInClient(),
+            isLoggedIn: liff.isLoggedIn(),
+            context: liff.getContext(),
+            version: liff.getVersion(),
+          });
+
+          showStatus("取得完了！", "success");
+          setTimeout(hideStatus, 2000);
+        } catch (error) {
+          console.error("LIFF初期化エラー:", error);
+          showStatus(`エラー: ${error.message}`, "error");
+        } finally {
+          initButton.disabled = false;
         }
-        
-        // ステータス非表示関数
-        function hideStatus() {
-            statusDiv.style.display = 'none';
+      }
+
+      // プロフィール情報表示
+      function displayProfile(profile) {
+        profileImage.src =
+          profile.pictureUrl || "https://via.placeholder.com/80";
+        displayName.textContent = profile.displayName || "未設定";
+        userId.textContent = profile.userId || "取得できませんでした";
+        statusMessage.textContent = profile.statusMessage || "未設定";
+
+        profileInfo.style.display = "block";
+      }
+
+      // ボタンクリックイベント
+      initButton.addEventListener("click", initializeLIFF);
+
+      // メッセージ送信イベント
+      sendTextButton.addEventListener("click", sendTextMessage);
+      sendStickerButton.addEventListener("click", sendSticker);
+      sendLocationButton.addEventListener("click", sendLocation);
+
+      // テキストメッセージ送信
+      async function sendTextMessage() {
+        try {
+          const message = messageInput.value.trim();
+          if (!message) {
+            showStatus("メッセージを入力してください", "error");
+            return;
+          }
+
+          // 環境チェック
+          if (!liff.isInClient()) {
+            showStatus("LINEアプリ内で開いてください", "error");
+            return;
+          }
+
+          showStatus("メッセージ送信中...", "loading");
+
+          await liff.sendMessages([
+            {
+              type: "text",
+              text: message,
+            },
+          ]);
+
+          showStatus("メッセージを送信しました！", "success");
+          messageInput.value = ""; // 入力欄をクリア
+          setTimeout(hideStatus, 2000);
+        } catch (error) {
+          console.error("メッセージ送信エラー:", error);
+          console.error("Error details:", {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          });
+          showStatus(`送信エラー: ${error.message}`, "error");
         }
-        
-        // LIFF初期化処理
-        async function initializeLIFF() {
-            try {
-                showStatus('LIFF初期化中...', 'loading');
-                initButton.disabled = true;
-                
-                // LIFF初期化
-                await liff.init({ liffId: LIFF_ID });
-                
-                // ログイン状態チェック
-                if (!liff.isLoggedIn()) {
-                    showStatus('ログインが必要です', 'error');
-                    liff.login();
-                    return;
-                }
-                
-                showStatus('プロフィール情報取得中...', 'loading');
-                
-                // プロフィール情報取得
-                const profile = await liff.getProfile();
-                
-                // プロフィール情報を表示
-                displayProfile(profile);
-                
-                // LIFF環境の確認
-                console.log('LIFF Context:', {
-                    isInClient: liff.isInClient(),
-                    isLoggedIn: liff.isLoggedIn(),
-                    context: liff.getContext(),
-                    version: liff.getVersion()
-                });
-                
-                showStatus('取得完了！', 'success');
-                setTimeout(hideStatus, 2000);
-                
-            } catch (error) {
-                console.error('LIFF初期化エラー:', error);
-                showStatus(`エラー: ${error.message}`, 'error');
-            } finally {
-                initButton.disabled = false;
-            }
+      }
+
+      // スタンプ送信
+      async function sendSticker() {
+        try {
+          showStatus("スタンプ送信中...", "loading");
+
+          await liff.sendMessages([
+            {
+              type: "sticker",
+              packageId: "446",
+              stickerId: "1988",
+            },
+          ]);
+
+          showStatus("スタンプを送信しました！", "success");
+          setTimeout(hideStatus, 2000);
+        } catch (error) {
+          console.error("スタンプ送信エラー:", error);
+          showStatus(`送信エラー: ${error.message}`, "error");
         }
-        
-        // プロフィール情報表示
-        function displayProfile(profile) {
-            profileImage.src = profile.pictureUrl || 'https://via.placeholder.com/80';
-            displayName.textContent = profile.displayName || '未設定';
-            userId.textContent = profile.userId || '取得できませんでした';
-            statusMessage.textContent = profile.statusMessage || '未設定';
-            
-            profileInfo.style.display = 'block';
+      }
+
+      // 位置情報送信
+      async function sendLocation() {
+        try {
+          showStatus("位置情報取得中...", "loading");
+
+          // 位置情報取得
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+
+          const { latitude, longitude } = position.coords;
+
+          showStatus("位置情報送信中...", "loading");
+
+          await liff.sendMessages([
+            {
+              type: "location",
+              title: "現在の位置",
+              address: "位置情報",
+              latitude: latitude,
+              longitude: longitude,
+            },
+          ]);
+
+          showStatus("位置情報を送信しました！", "success");
+          setTimeout(hideStatus, 2000);
+        } catch (error) {
+          console.error("位置情報送信エラー:", error);
+          if (error.code === 1) {
+            showStatus("位置情報へのアクセスが拒否されました", "error");
+          } else {
+            showStatus(`送信エラー: ${error.message}`, "error");
+          }
         }
-        
-        // ボタンクリックイベント
-        initButton.addEventListener('click', initializeLIFF);
-        reloginButton.addEventListener('click', forceRelogin);
-        
-        // メッセージ送信イベント
-        sendTextButton.addEventListener('click', sendTextMessage);
-        sendStickerButton.addEventListener('click', sendSticker);
-        sendLocationButton.addEventListener('click', sendLocation);
-        
-        // テキストメッセージ送信
-        async function sendTextMessage() {
-            try {
-                const message = messageInput.value.trim();
-                if (!message) {
-                    showStatus('メッセージを入力してください', 'error');
-                    return;
-                }
-                
-                // 環境チェック
-                if (!liff.isInClient()) {
-                    showStatus('LINEアプリ内で開いてください', 'error');
-                    return;
-                }
-                
-                showStatus('メッセージ送信中...', 'loading');
-                
-                await liff.sendMessages([{
-                    type: 'text',
-                    text: message
-                }]);
-                
-                showStatus('メッセージを送信しました！', 'success');
-                messageInput.value = ''; // 入力欄をクリア
-                setTimeout(hideStatus, 2000);
-                
-            } catch (error) {
-                console.error('メッセージ送信エラー:', error);
-                console.error('Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack
-                });
-                showStatus(`送信エラー: ${error.message}`, 'error');
-            }
-        }
-        
-        // スタンプ送信
-        async function sendSticker() {
-            try {
-                showStatus('スタンプ送信中...', 'loading');
-                
-                await liff.sendMessages([{
-                    type: 'sticker',
-                    packageId: '446',
-                    stickerId: '1988'
-                }]);
-                
-                showStatus('スタンプを送信しました！', 'success');
-                setTimeout(hideStatus, 2000);
-                
-            } catch (error) {
-                console.error('スタンプ送信エラー:', error);
-                showStatus(`送信エラー: ${error.message}`, 'error');
-            }
-        }
-        
-        // 位置情報送信
-        async function sendLocation() {
-            try {
-                showStatus('位置情報取得中...', 'loading');
-                
-                // 位置情報取得
-                const position = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject);
-                });
-                
-                const { latitude, longitude } = position.coords;
-                
-                showStatus('位置情報送信中...', 'loading');
-                
-                await liff.sendMessages([{
-                    type: 'location',
-                    title: '現在の位置',
-                    address: '位置情報',
-                    latitude: latitude,
-                    longitude: longitude
-                }]);
-                
-                showStatus('位置情報を送信しました！', 'success');
-                setTimeout(hideStatus, 2000);
-                
-            } catch (error) {
-                console.error('位置情報送信エラー:', error);
-                if (error.code === 1) {
-                    showStatus('位置情報へのアクセスが拒否されました', 'error');
-                } else {
-                    showStatus(`送信エラー: ${error.message}`, 'error');
-                }
-            }
-        }
-        
-        // 強制再ログイン（権限再取得）
-        async function forceRelogin() {
-            try {
-                showStatus('権限を再取得しています...', 'loading');
-                
-                // 現在のセッションをクリア
-                if (liff.isLoggedIn()) {
-                    await liff.logout();
-                }
-                
-                // 強制的に再ログイン（権限再承認）
-                liff.login({
-                    redirectUri: window.location.href
-                });
-                
-            } catch (error) {
-                console.error('再ログインエラー:', error);
-                showStatus(`再ログインエラー: ${error.message}`, 'error');
-            }
-        }
-        
-        // ページ読み込み時の自動初期化（オプション）
-        // window.addEventListener('load', initializeLIFF);
+      }
+
+      // ページ読み込み時の自動初期化（オプション）
+      // window.addEventListener('load', initializeLIFF);
     </script>
-</body>
+  </body>
 </html>
