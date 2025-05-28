@@ -1,34 +1,142 @@
-<!-- アンケートセクション -->
-<div
-  class="survey-section"
-  style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee"
->
-  <h3 style="color: #333; margin-bottom: 16px; font-size: 16px">
-    簡易アンケート
-  </h3>
-  <p style="color: #555; margin-bottom: 12px">
-    このLIFFアプリは役に立ちそうですか？
-  </p>
-  <div class="button-group">
-    <button id="surveyYesButton" class="action-button">はい</button>
-    <button id="surveyNoButton" class="action-button">いいえ</button>
-    <button id="surveyMaybeButton" class="action-button">どちらでもない</button>
-  </div>
-</div>
-<!-- アンケートセクション -->
-<div
-  class="survey-section"
-  style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee"
->
-  <h3 style="color: #333; margin-bottom: 16px; font-size: 16px">
-    簡易アンケート
-  </h3>
-  <p style="color: #555; margin-bottom: 12px">
-    このLIFFアプリは役に立ちそうですか？
-  </p>
-  <div class="button-group">
-    <button id="surveyYesButton" class="action-button">はい</button>
-    <button id="surveyNoButton" class="action-button">いいえ</button>
-    <button id="surveyMaybeButton" class="action-button">どちらでもない</button>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LIFF Survey App</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .survey-section {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #eee;
+      }
+      .survey-section:first-child {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+      }
+      h3 {
+        color: #333;
+        margin-bottom: 16px;
+        font-size: 18px;
+      }
+      p {
+        color: #555;
+        margin-bottom: 12px;
+        font-size: 16px;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+      .action-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: white;
+        background-color: #00b900; /* LINE Green */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .action-button:hover {
+        background-color: #008c00;
+      }
+      #errorMessage {
+        color: red;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="survey-section">
+        <h3>簡易アンケート</h3>
+        <p>このLIFFアプリは役に立ちそうですか？</p>
+        <div class="button-group">
+          <button id="surveyYesButton" class="action-button">はい</button>
+          <button id="surveyNoButton" class="action-button">いいえ</button>
+          <button id="surveyMaybeButton" class="action-button">
+            どちらでもない
+          </button>
+        </div>
+      </div>
+      <div id="errorMessage"></div>
+    </div>
+
+    <script>
+      async function initializeLiff() {
+        try {
+          await liff.init({ liffId: "2007493358-3eBLORWm" }); // ← ここにあなたのLIFF IDを入力してください
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          } else {
+            // ログイン済みの場合の処理 (例: ユーザープロファイル取得)
+            const profile = await liff.getProfile();
+            console.log("User Profile:", profile);
+          }
+        } catch (error) {
+          console.error("LIFF Initialization failed:", error);
+          document.getElementById("errorMessage").textContent =
+            "LIFFの初期化に失敗しました: " + error.message;
+        }
+      }
+
+      function registerButtonHandlers() {
+        document
+          .getElementById("surveyYesButton")
+          .addEventListener("click", () => {
+            sendMessage("はい");
+          });
+        document
+          .getElementById("surveyNoButton")
+          .addEventListener("click", () => {
+            sendMessage("いいえ");
+          });
+        document
+          .getElementById("surveyMaybeButton")
+          .addEventListener("click", () => {
+            sendMessage("どちらでもない");
+          });
+      }
+
+      async function sendMessage(text) {
+        if (!liff.isInClient()) {
+          alert("この機能はLINEアプリ内でのみ利用可能です。");
+          return;
+        }
+        try {
+          await liff.sendMessages([{ type: "text", text: text }]);
+          liff.closeWindow();
+        } catch (error) {
+          console.error("Error sending message:", error);
+          document.getElementById("errorMessage").textContent =
+            "メッセージの送信に失敗しました: " + error.message;
+        }
+      }
+
+      async function main() {
+        await initializeLiff();
+        if (liff.isLoggedIn()) {
+          registerButtonHandlers();
+        }
+      }
+
+      main();
+    </script>
+  </body>
+</html>
