@@ -12,6 +12,27 @@
             background-color: #f5f5f5;
         }
         
+        // 強制再ログイン（権限再取得）
+        async function forceRelogin() {
+            try {
+                showStatus('権限を再取得しています...', 'loading');
+                
+                // 現在のセッションをクリア
+                if (liff.isLoggedIn()) {
+                    await liff.logout();
+                }
+                
+                // 強制的に再ログイン（権限再承認）
+                liff.login({
+                    redirectUri: window.location.href
+                });
+                
+            } catch (error) {
+                console.error('再ログインエラー:', error);
+                showStatus(`再ログインエラー: ${error.message}`, 'error');
+            }
+        }
+        
         .container {
             max-width: 400px;
             margin: 0 auto;
@@ -147,6 +168,10 @@
         
         <button id="initButton" class="init-button">LIFF初期化</button>
         
+        <button id="reloginButton" class="init-button" style="background-color: #ff6b35; margin-bottom: 16px;">
+            🔄 権限を再取得
+        </button>
+        
         <div id="profileInfo" class="profile-info">
             <img id="profileImage" class="profile-image" src="" alt="プロフィール画像">
             
@@ -173,6 +198,10 @@
                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
                 
                 <div class="button-group">
+                    <button id="checkEnvironment" class="action-button" style="background-color: #666;">
+                        🔍 環境確認
+                    </button>
+                    
                     <button id="sendTextButton" class="action-button">
                         📝 テキスト送信
                     </button>
@@ -198,6 +227,7 @@
         
         // DOM要素の取得
         const initButton = document.getElementById('initButton');
+        const reloginButton = document.getElementById('reloginButton');
         const statusDiv = document.getElementById('status');
         const profileInfo = document.getElementById('profileInfo');
         const profileImage = document.getElementById('profileImage');
@@ -207,6 +237,7 @@
         
         // メッセージ送信用の要素
         const messageInput = document.getElementById('messageInput');
+        const checkEnvironment = document.getElementById('checkEnvironment');
         const sendTextButton = document.getElementById('sendTextButton');
         const sendStickerButton = document.getElementById('sendStickerButton');
         const sendLocationButton = document.getElementById('sendLocationButton');
@@ -247,6 +278,14 @@
                 // プロフィール情報を表示
                 displayProfile(profile);
                 
+                // LIFF環境の確認
+                console.log('LIFF Context:', {
+                    isInClient: liff.isInClient(),
+                    isLoggedIn: liff.isLoggedIn(),
+                    context: liff.getContext(),
+                    version: liff.getVersion()
+                });
+                
                 showStatus('取得完了！', 'success');
                 setTimeout(hideStatus, 2000);
                 
@@ -270,6 +309,7 @@
         
         // ボタンクリックイベント
         initButton.addEventListener('click', initializeLIFF);
+        reloginButton.addEventListener('click', forceRelogin);
         
         // メッセージ送信イベント
         sendTextButton.addEventListener('click', sendTextMessage);
@@ -282,6 +322,12 @@
                 const message = messageInput.value.trim();
                 if (!message) {
                     showStatus('メッセージを入力してください', 'error');
+                    return;
+                }
+                
+                // 環境チェック
+                if (!liff.isInClient()) {
+                    showStatus('LINEアプリ内で開いてください', 'error');
                     return;
                 }
                 
@@ -298,6 +344,11 @@
                 
             } catch (error) {
                 console.error('メッセージ送信エラー:', error);
+                console.error('Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
                 showStatus(`送信エラー: ${error.message}`, 'error');
             }
         }
