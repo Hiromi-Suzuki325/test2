@@ -60,6 +60,11 @@
         color: red;
         margin-top: 10px;
       }
+        #feedbackMessage p {
+            color: #00B900; /* LINE Green for positive feedback */
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
   </head>
   <body>
@@ -75,7 +80,10 @@
           </button>
         </div>
       </div>
-      <div id="errorMessage"></div>
+        <div id="errorMessage"></div>
+        <div id="feedbackMessage" style="display: none; text-align: center; margin-top: 20px;">
+            <p>ご回答ありがとうございました！</p>
+        </div>
     </div>
 
     <script>
@@ -121,11 +129,30 @@
         }
         try {
           await liff.sendMessages([{ type: "text", text: text }]);
-          liff.closeWindow();
+          
+          // Hide survey section elements
+          const surveySection = document.querySelector('.survey-section');
+          if (surveySection) {
+            const h3 = surveySection.querySelector('h3');
+            const p = surveySection.querySelector('p');
+            const buttonGroup = surveySection.querySelector('.button-group');
+            if (h3) h3.style.display = 'none';
+            if (p) p.style.display = 'none';
+            if (buttonGroup) buttonGroup.style.display = 'none';
+          }
+
+          // Show feedback message
+          const feedbackDiv = document.getElementById("feedbackMessage");
+          if (feedbackDiv) {
+            feedbackDiv.style.display = 'block';
+          } else {
+            console.error("Feedback message element not found!");
+          }
+
+          // liff.closeWindow(); // User closes manually or implement a delayed close/button
         } catch (error) {
           console.error("Error sending message:", error);
-          document.getElementById("errorMessage").textContent =
-            "メッセージの送信に失敗しました: " + error.message;
+          document.getElementById("errorMessage").textContent = "メッセージの送信に失敗しました: " + error.message;
         }
       }
 
