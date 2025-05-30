@@ -137,21 +137,6 @@
             placeholder="example@xxx.com"
             required
           />
-          <p class="note">
-            ※携帯キャリアのアドレスを入力する場合、携帯キャリアの受信許可リストに「reserva.be」を追加してください。
-          </p>
-        </div>
-        <div class="form-group">
-          <label for="emailConfirm" class="required"
-            >メールアドレス (確認)</label
-          >
-          <input
-            type="email"
-            id="emailConfirm"
-            name="emailConfirm"
-            placeholder="example@xxx.com"
-            required
-          />
         </div>
         <div class="form-group">
           <label for="tel" class="required">電話番号</label>
@@ -162,6 +147,50 @@
             placeholder="0312345678"
             required
           />
+        </div>
+        <div class="form-group">
+          <label for="preferredDateTime" class="required">希望日時</label>
+          <input
+            type="datetime-local"
+            id="preferredDateTime"
+            name="preferredDateTime"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>受講コース</label>
+          <div class="toggle-group">
+            <input type="radio" id="courseA" name="course" value="A" checked />
+            <label for="courseA">A</label>
+            <input type="radio" id="courseB" name="course" value="B" />
+            <label for="courseB">B</label>
+            <input type="radio" id="courseC" name="course" value="C" />
+            <label for="courseC">C</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="isMinor">未成年ですか？</label>
+          <input type="checkbox" id="isMinor" name="isMinor" />
+        </div>
+        <div id="guardianInfo" style="display: none">
+          <div class="form-group">
+            <label for="guardianName" class="required">保護者氏名</label>
+            <input
+              type="text"
+              id="guardianName"
+              name="guardianName"
+              placeholder="保護者氏名"
+            />
+          </div>
+          <div class="form-group">
+            <label for="guardianContact" class="required">保護者連絡先</label>
+            <input
+              type="tel"
+              id="guardianContact"
+              name="guardianContact"
+              placeholder="保護者連絡先"
+            />
+          </div>
         </div>
         <button type="submit" class="action-button">送信</button>
       </form>
@@ -201,14 +230,16 @@
           const lastNameKana = document.getElementById("lastNameKana").value;
           const firstNameKana = document.getElementById("firstNameKana").value;
           const email = document.getElementById("email").value;
-          const emailConfirm = document.getElementById("emailConfirm").value;
           const tel = document.getElementById("tel").value;
-
-          if (email !== emailConfirm) {
-            document.getElementById("errorMessage").textContent =
-              "メールアドレスが一致しません。";
-            return;
-          }
+          const preferredDateTime =
+            document.getElementById("preferredDateTime").value;
+          const course = document.querySelector(
+            'input[name="course"]:checked'
+          ).value;
+          const isMinor = document.getElementById("isMinor").checked;
+          const guardianName = document.getElementById("guardianName").value;
+          const guardianContact =
+            document.getElementById("guardianContact").value;
 
           const messageText = `氏名: ${lastName} ${firstName}\\n氏名(カナ): ${lastNameKana} ${firstNameKana}\\nメールアドレス: ${email}\\n電話番号: ${tel}`;
           await sendMessage(messageText);
@@ -245,10 +276,31 @@
         }
       }
 
+      function setupGuardianInfoToggle() {
+        const isMinorCheckbox = document.getElementById("isMinor");
+        const guardianInfoDiv = document.getElementById("guardianInfo");
+        if (isMinorCheckbox && guardianInfoDiv) {
+          isMinorCheckbox.addEventListener("change", function () {
+            guardianInfoDiv.style.display = this.checked ? "block" : "none";
+            const guardianNameInput = document.getElementById("guardianName");
+            const guardianContactInput =
+              document.getElementById("guardianContact");
+            if (this.checked) {
+              guardianNameInput.setAttribute("required", "required");
+              guardianContactInput.setAttribute("required", "required");
+            } else {
+              guardianNameInput.removeAttribute("required");
+              guardianContactInput.removeAttribute("required");
+            }
+          });
+        }
+      }
+
       async function main() {
         await initializeLiff();
         if (liff.isLoggedIn()) {
           registerButtonHandlers();
+          setupGuardianInfoToggle();
         }
       }
 
