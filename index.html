@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -18,30 +18,52 @@
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
-      .survey-section {
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 1px solid #eee;
+      .form-group {
+        margin-bottom: 15px;
       }
-      .survey-section:first-child {
-        margin-top: 0;
-        padding-top: 0;
-        border-top: none;
-      }
-      h3 {
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
         color: #333;
-        margin-bottom: 16px;
-        font-size: 18px;
       }
-      p {
-        color: #555;
-        margin-bottom: 12px;
+      .form-group input[type="text"],
+      .form-group input[type="email"],
+      .form-group input[type="tel"] {
+        width: calc(100% - 22px); /* Adjust for padding and border */
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
         font-size: 16px;
       }
-      .button-group {
+      .form-group input[type="text"][name="lastName"],
+      .form-group input[type="text"][name="firstName"],
+      .form-group input[type="text"][name="lastNameKana"],
+      .form-group input[type="text"][name="firstNameKana"] {
+        width: calc(50% - 16px); /* Half width for name fields */
+        display: inline-block;
+      }
+      .form-group input[type="text"][name="lastName"] {
+        margin-right: 10px;
+      }
+      .form-group .name-fields,
+      .form-group .kana-fields {
         display: flex;
         gap: 10px;
-        justify-content: center;
+      }
+      .form-group .name-fields input,
+      .form-group .kana-fields input {
+        flex: 1;
+      }
+      .form-group .note {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+      .required::after {
+        content: "*";
+        color: red;
+        margin-left: 4px;
       }
       .action-button {
         padding: 10px 20px;
@@ -52,6 +74,9 @@
         border-radius: 5px;
         cursor: pointer;
         transition: background-color 0.3s;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 20px;
       }
       .action-button:hover {
         background-color: #008c00;
@@ -60,29 +85,92 @@
         color: red;
         margin-top: 10px;
       }
-
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="survey-section">
-        <h3>簡易アンケート</h3>
-        <p>このLIFFアプリは役に立ちそうですか？</p>
-        <div class="button-group">
-          <button id="surveyYesButton" class="action-button">はい</button>
-          <button id="surveyNoButton" class="action-button">いいえ</button>
-          <button id="surveyMaybeButton" class="action-button">
-            どちらでもない
-          </button>
+      <form id="surveyForm">
+        <div class="form-group">
+          <label for="lastName" class="required">氏名</label>
+          <div class="name-fields">
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              placeholder="姓"
+              required
+            />
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              placeholder="名"
+              required
+            />
+          </div>
         </div>
+        <div class="form-group">
+          <label for="lastNameKana" class="required">氏名 (カナ)</label>
+          <div class="kana-fields">
+            <input
+              type="text"
+              id="lastNameKana"
+              name="lastNameKana"
+              placeholder="セイ"
+              required
+            />
+            <input
+              type="text"
+              id="firstNameKana"
+              name="firstNameKana"
+              placeholder="メイ"
+              required
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email" class="required">メールアドレス</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="example@xxx.com"
+            required
+          />
+          <p class="note">
+            ※携帯キャリアのアドレスを入力する場合、携帯キャリアの受信許可リストに「reserva.be」を追加してください。
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="emailConfirm" class="required"
+            >メールアドレス (確認)</label
+          >
+          <input
+            type="email"
+            id="emailConfirm"
+            name="emailConfirm"
+            placeholder="example@xxx.com"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="tel" class="required">電話番号</label>
+          <input
+            type="tel"
+            id="tel"
+            name="tel"
+            placeholder="0312345678"
+            required
+          />
+        </div>
+        <button type="submit" class="action-button">送信</button>
+      </form>
+      <div id="errorMessage"></div>
+      <div id="surveyCompletionMessage" style="display: none">
+        <h3>ご協力いただきありがとうございます！</h3>
+        <p>ご回答を送信しました。</p>
+        <button id="closeButton" class="action-button">閉じる</button>
       </div>
-        <div id="errorMessage"></div>
-        <div id="surveyCompletionMessage" style="display: none;">
-            <h3>アンケートにご協力いただきありがとうございます！</h3>
-            <p>ご回答を送信しました。</p>
-            <button id="closeButton" class="action-button">閉じる</button>
-        </div>
-
     </div>
 
     <script>
@@ -104,39 +192,56 @@
       }
 
       function registerButtonHandlers() {
+        const form = document.getElementById("surveyForm");
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault(); // Prevent default form submission
+
+          const lastName = document.getElementById("lastName").value;
+          const firstName = document.getElementById("firstName").value;
+          const lastNameKana = document.getElementById("lastNameKana").value;
+          const firstNameKana = document.getElementById("firstNameKana").value;
+          const email = document.getElementById("email").value;
+          const emailConfirm = document.getElementById("emailConfirm").value;
+          const tel = document.getElementById("tel").value;
+
+          if (email !== emailConfirm) {
+            document.getElementById("errorMessage").textContent =
+              "メールアドレスが一致しません。";
+            return;
+          }
+
+          const messageText = `氏名: ${lastName} ${firstName}\\n氏名(カナ): ${lastNameKana} ${firstNameKana}\\nメールアドレス: ${email}\\n電話番号: ${tel}`;
+          await sendMessage(messageText);
+        });
+
         document
-          .getElementById("surveyYesButton")
-          .addEventListener("click", () => {
-            sendMessage("はい");
-          });
-        document
-          .getElementById("surveyNoButton")
-          .addEventListener("click", () => {
-            sendMessage("いいえ");
-          });
-        document
-          .getElementById("surveyMaybeButton")
-          .addEventListener("click", () => {
-            sendMessage("どちらでもない");
-          });
-        // Add handler for the new close button
-        document.getElementById("closeButton").addEventListener("click", () => liff.closeWindow());
+          .getElementById("closeButton")
+          .addEventListener("click", () => liff.closeWindow());
       }
 
       async function sendMessage(text) {
         if (!liff.isInClient()) {
-          alert("この機能はLINEアプリ内でのみ利用可能です。");
+          alert(
+            "この機能はLINEアプリ内でのみ利用可能です。フォームの内容をコンソールに出力します。"
+          );
+          console.log("Form Data:\\n" + text);
+          // For testing outside LINE, you might want to simulate success
+          document.getElementById("surveyForm").style.display = "none";
+          document.getElementById("surveyCompletionMessage").style.display =
+            "block";
           return;
         }
         try {
           await liff.sendMessages([{ type: "text", text: text }]);
-          
+
           // Hide survey section and show completion message
-          document.querySelector(".survey-section").style.display = "none";
-          document.getElementById("surveyCompletionMessage").style.display = "block";
+          document.getElementById("surveyForm").style.display = "none";
+          document.getElementById("surveyCompletionMessage").style.display =
+            "block";
         } catch (error) {
           console.error("Error sending message:", error);
-          document.getElementById("errorMessage").textContent = "メッセージの送信に失敗しました: " + error.message;
+          document.getElementById("errorMessage").textContent =
+            "メッセージの送信に失敗しました: " + error.message;
         }
       }
 
